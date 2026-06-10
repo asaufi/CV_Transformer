@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(extract-text \"C:\\\\Users\\\\anas.saufi\\\\Downloads\\\\CV MCE - Olivier R.docx\")",
+      "PowerShell(python --version 2>&1)",
+      "PowerShell(py --version 2>&1)",
+      "PowerShell(Get-Command python3 -ErrorAction SilentlyContinue)",
+      "PowerShell($p = Get-Command python3.exe -ErrorAction SilentlyContinue; $p.Source)"
+    ]
+  }
+}
