@@ -664,21 +664,21 @@ ${cvText}`;
 
     function renderPreview(d) {
       let h = `<div class="cv-head"><b>MCE Automation</b>${escapeHtml(d.prenom)} ${escapeHtml(d.nom_initiale)}.${d.titre_fonction ? " - " + escapeHtml(d.titre_fonction) : ""}</div>`;
-      h += `<div class="cv-title">En bref </div>`;
-      if (d.experience_annees) h += `<p class="cv-p cv-bold">Expérience : ${escapeHtml(d.experience_annees)}</p>`;
-      if (d.specialites.length) h += `<p class="cv-p cv-bold">Spécialités : ${escapeHtml(d.specialites.join(", "))}</p>`;
-      h += `<div class="cv-title">Expériences professionnelles </div>`;
+      h += `<div class="cv-title">EN BREF</div>`;
+      if (d.experience_annees) h += `<p class="cv-p"><b>Expérience</b> : ${escapeHtml(d.experience_annees)}</p>`;
+      if (d.specialites.length) h += `<p class="cv-p"><b>Spécialités</b> : ${escapeHtml(d.specialites.join(", "))}</p>`;
+      h += `<div class="cv-title">EXPERIENCES PROFESSIONNELLES</div>`;
       for (const exp of d.experiences) {
-        const line = [exp.periode, exp.entreprise].filter(Boolean).join(" : ");
+        const line = [exp.periode, exp.entreprise].filter(Boolean).join(" ");
         if (line) h += `<p class="cv-p cv-bold">${escapeHtml(line)}</p>`;
         for (const m of exp.missions) {
-          if (m.client)      h += `<p class="cv-p">Pour ${escapeHtml(m.client)} :</p>`;
-          if (m.titre_poste) h += `<p class="cv-p cv-bold">${escapeHtml(m.titre_poste)}</p>`;
-          for (const t of m.taches) h += `<p class="cv-p">${escapeHtml(t)}</p>`;
+          if (m.client)      h += `<p class="cv-p" style="margin-left: 20px;">• Pour ${escapeHtml(m.client)} :</p>`;
+          if (m.titre_poste) h += `<p class="cv-p cv-bold" style="margin-left: 20px;">• ${escapeHtml(m.titre_poste)}</p>`;
+          for (const t of m.taches) h += `<p class="cv-p" style="margin-left: 20px;">• ${escapeHtml(t)}</p>`;
           h += `<br>`;
         }
       }
-      h += `<div class="cv-title">Formation</div>`;
+      h += `<div class="cv-title">FORMATION</div>`;
       if (d.habilitations) h += `<p class="cv-p cv-bold">Habilitations : ${escapeHtml(d.habilitations)}</p>`;
       for (const f of d.formation)
         h += `<p class="cv-p cv-bold">${escapeHtml([f.annee, f.diplome].filter(Boolean).join(" : "))}</p>`;
@@ -700,58 +700,85 @@ ${cvText}`;
         "docProps/core.xml":            coreXml(),
         "word/_rels/document.xml.rels": docRelsXml(),
         "word/header1.xml":             headerXml(d),
+        "word/footer1.xml":             footerXml(),
         "word/document.xml":            documentXml(d)
       };
       return new Blob([zipStore(files)],
         { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
     }
 
-    function pXml(text, bold = false, title = false) {
+    function footerXml() {
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:jc w:val="right"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="18"/></w:rPr><w:t>Contact MCE Automation</w:t></w:r></w:p><w:p><w:pPr><w:jc w:val="right"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="18"/></w:rPr><w:t>rh@mce-automation.com</w:t></w:r></w:p><w:p><w:pPr><w:jc w:val="right"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Wingdings" w:hAnsi="Wingdings"/><w:sz w:val="18"/></w:rPr><w:t>&#40;</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="18"/></w:rPr><w:t> 02.78.94.02.90</w:t></w:r></w:p></w:ftr>`;
+    }
+
+    function pXmlPartialBold(parts, fontSize = 20, font = "Calibri", indent = 0) {
+      const indentStr = indent > 0 ? `<w:ind w:left="${indent}" w:hang="0"/>` : "";
+      let rr = "";
+      for (const part of parts) {
+        const b = part.bold ? "<w:b/>" : "";
+        rr += `<w:r><w:rPr>${b}<w:rFonts w:ascii="${font}" w:hAnsi="${font}"/><w:sz w:val="${fontSize}"/></w:rPr><w:t xml:space="preserve">${escapeXml(part.text)}</w:t></w:r>`;
+      }
+      return `<w:p><w:pPr>${indentStr}<w:spacing w:after="25"/></w:pPr>${rr}</w:p>`;
+    }
+
+    function pXml(text, bold = false, title = false, fontSize = 20, font = "Calibri", align = "", indent = 0) {
       const border = title
         ? `<w:pBdr><w:bottom w:val="single" w:sz="8" w:space="1" w:color="ED7D31"/></w:pBdr>`
         : "";
       const b = bold ? "<w:b/>" : "";
-      return `<w:p><w:pPr>${border}<w:spacing w:after="${title ? 80 : 25}"/></w:pPr><w:r><w:rPr>${b}<w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/><w:sz w:val="${title ? 24 : 20}"/></w:rPr><w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r></w:p>`;
+      const alignStr = align ? `<w:jc w:val="${align}"/>` : "";
+      const indentStr = indent > 0 ? `<w:ind w:left="${indent}" w:hang="0"/>` : "";
+      return `<w:p><w:pPr>${alignStr}${indentStr}${border}<w:spacing w:after="${title ? 80 : 25}"/></w:pPr><w:r><w:rPr>${b}<w:rFonts w:ascii="${font}" w:hAnsi="${font}"/><w:sz w:val="${fontSize}"/></w:rPr><w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r></w:p>`;
     }
 
     function headerXml(d) {
-      const line = `${d.prenom} ${d.nom_initiale}.${d.titre_fonction ? " - " + d.titre_fonction : ""}`;
-      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">${pXml("MCE Automation", true)}${pXml(line, false)}</w:hdr>`;
+      const infoLine = `${d.prenom} ${d.nom_initiale}.${d.titre_fonction ? " - " + d.titre_fonction : ""}`;
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:jc w:val="right"/></w:pPr><w:r><w:rPr><w:b/><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="36"/><w:color w:val="ED7D31"/></w:rPr><w:t>MCE Automation</w:t></w:r></w:p><w:p><w:pPr><w:jc w:val="right"/></w:pPr><w:r><w:rPr><w:b/><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="32"/></w:rPr><w:t xml:space="preserve">${escapeXml(infoLine)}</w:t></w:r></w:p></w:hdr>`;
     }
 
     function documentXml(d) {
       let body = "";
       body += pXml("", false);
-      body += pXml("En bref ", false, true);
-      if (d.experience_annees) body += pXml(`Expérience : ${d.experience_annees}`, true);
-      if (d.specialites.length) body += pXml(`Spécialités : ${d.specialites.join(", ")}`, true);
-      body += pXml("Expériences professionnelles ", false, true);
+      
+      // Section EN BREF
+      body += pXml("EN BREF", false, true, 24, "Calibri");
+      if (d.experience_annees) body += pXmlPartialBold([{text: "Expérience", bold: true}, {text: " : " + d.experience_annees, bold: false}], 24, "Calibri");
+      if (d.specialites.length) body += pXmlPartialBold([{text: "Spécialités", bold: true}, {text: " : " + d.specialites.join(", "), bold: false}], 24, "Calibri");
+      
+      // Section EXPERIENCES PROFESSIONNELLES
+      body += pXml("EXPERIENCES PROFESSIONNELLES", false, true, 24, "Calibri");
       for (const exp of d.experiences) {
-        const line = [exp.periode, exp.entreprise].filter(Boolean).join(" : ");
-        if (line) body += pXml(line, true);
+        const line = [exp.periode, exp.entreprise].filter(Boolean).join(" ");
+        if (line) body += pXml(line, true, false, 24, "Calibri");
         for (const m of exp.missions) {
-          if (m.client)      body += pXml(`Pour ${m.client} :`);
-          if (m.titre_poste) body += pXml(m.titre_poste, true);
-          for (const t of m.taches) body += pXml(t);
-          body += pXml("");
+          if (m.client) {
+            const clientLine = `• Pour ${m.client} :`;
+            body += pXml(clientLine, false, false, 20, "Calibri", "", 720);
+          }
+          if (m.titre_poste) body += pXml(`• ${m.titre_poste}`, true, false, 20, "Calibri", "", 720);
+          for (const t of m.taches) body += pXml(`• ${t}`, false, false, 20, "Calibri", "", 720);
+          body += pXml("", false);
         }
       }
-      body += pXml("Formation", false, true);
-      if (d.habilitations) body += pXml(`Habilitations : ${d.habilitations}`, true);
+      
+      // Section FORMATION
+      body += pXml("FORMATION", false, true, 24, "Calibri");
+      if (d.habilitations) body += pXml(`Habilitations : ${d.habilitations}`, true, false, 22, "Calibri");
       for (const f of d.formation)
-        body += pXml([f.annee, f.diplome].filter(Boolean).join(" : "), true);
-      body += `<w:sectPr><w:headerReference w:type="default" r:id="rId1"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1361" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr>`;
+        body += pXml([f.annee, f.diplome].filter(Boolean).join(" : "), true, false, 22, "Calibri");
+      
+      body += `<w:sectPr><w:headerReference w:type="default" r:id="rId1"/><w:footerReference w:type="default" r:id="rId2"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1361" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr>`;
       return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body>${body}</w:body></w:document>`;
     }
 
     function contentTypesXml() {
-      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`;
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`;
     }
     function rootRelsXml() {
       return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>`;
     }
     function docRelsXml() {
-      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/></Relationships>`;
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/></Relationships>`;
     }
     function appXml() {
       return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>CV Transformer MCE</Application></Properties>`;
