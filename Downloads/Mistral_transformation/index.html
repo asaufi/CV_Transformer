@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CV Transformer MCE</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    :root {
+      --bg: #171717;
+      --panel: #202020;
+      --panel-2: #252525;
+      --line: #343434;
+      --text: #f3f3f3;
+      --muted: #a7a7a7;
+      --accent: #ed7d31;
+      --blue: #7da7ff;
+      --danger: #ff7373;
+      --ok: #5fe08b;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Segoe UI, system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      letter-spacing: 0;
+    }
+    button, input, select, textarea { font: inherit; }
+    .shell { max-width: 1180px; margin: 0 auto; padding: 28px 28px 44px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 28px; }
+    h1 { margin: 0; font-size: 28px; font-weight: 700; }
+    .top-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .btn:hover { border-color: #555; background: #2d2d2d; }
+    .btn.primary { background: var(--accent); color: #191919; border-color: var(--accent); font-weight: 700; }
+    .btn.primary:hover { background: #ff8c3d; }
+    .btn:disabled { opacity: .48; cursor: not-allowed; }
+    .icon { width: 18px; height: 18px; display: inline-block; }
+    .grid { display: grid; grid-template-columns: 360px 1fr; gap: 22px; align-items: start; }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .panel h2 {
+      margin: 0;
+      padding: 16px 18px;
+      font-size: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    .panel-body { padding: 18px; }
+    .field { margin-bottom: 16px; }
+    label { display: block; color: var(--muted); margin-bottom: 7px; font-size: 13px; }
+    input, select, textarea {
+      width: 100%;
+      background: #141414;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      min-height: 40px;
+      padding: 9px 11px;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    .row { display: flex; gap: 10px; align-items: center; }
+    .row > * { flex: 1; }
+    .drop {
+      border: 1px dashed #555;
+      border-radius: var(--radius);
+      padding: 18px;
+      text-align: center;
+      background: #181818;
+      min-height: 128px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .drop.drag { border-color: var(--accent); background: #221b16; }
+    .drop strong { font-size: 15px; }
+    .hint { color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .statusbar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+    .step {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: var(--radius);
+      padding: 12px;
+      min-height: 66px;
+    }
+    .step span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 5px; }
+    .step strong { font-size: 14px; }
+    .step.active { border-color: var(--accent); }
+    .step.done strong { color: var(--ok); }
+    .preview {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    pre {
+      margin: 0;
+      min-height: 330px;
+      max-height: 520px;
+      overflow: auto;
+      background: #111;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      color: #e8e8e8;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .cv-preview {
+      min-height: 330px;
+      max-height: 520px;
+      overflow: auto;
+      background: #f8f8f8;
+      color: #242424;
+      border-radius: var(--radius);
+      padding: 28px;
+      font-family: Calibri, Arial, sans-serif;
+      line-height: 1.35;
+    }
+    .cv-head { text-align: right; color: #404040; margin-bottom: 34px; }
+    .cv-head b { display: block; }
+    .cv-title {
+      border-bottom: 2px solid var(--accent);
+      color: #404040;
+      margin: 14px 0 8px;
+      padding-bottom: 4px;
+      font-size: 17px;
+    }
+    .cv-p { margin: 3px 0; }
+    .cv-bold { font-weight: 700; }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .message {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 11px 13px;
+      background: #141414;
+      color: var(--muted);
+      min-height: 42px;
+      margin-top: 14px;
+    }
+    .message.error { color: var(--danger); border-color: #743434; }
+    .message.ok { color: var(--ok); border-color: #326b45; }
+    .danger-note { color: #ffc080; }
+    @media (max-width: 900px) {
+      .grid, .preview { grid-template-columns: 1fr; }
+      .statusbar { grid-template-columns: 1fr 1fr; }
+      header { align-items: flex-start; flex-direction: column; }
+    }
+    @media (max-width: 560px) {
+      .shell { padding: 20px 14px 32px; }
+      .statusbar { grid-template-columns: 1fr; }
+      .row { flex-direction: column; align-items: stretch; }
+      .top-actions { width: 100%; }
+      .top-actions .btn { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <h1>CV Transformer MCE</h1>
+      <div class="top-actions">
+        <button class="btn" id="clearBtn">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          Réinitialiser
+        </button>
+      </div>
+    </header>
+
+    <section class="statusbar" aria-label="Progression">
+      <div class="step active" id="step1"><span>1</span><strong>Configurer</strong></div>
+      <div class="step" id="step2"><span>2</span><strong>Joindre le CV</strong></div>
+      <div class="step" id="step3"><span>3</span><strong>Analyser IA</strong></div>
+      <div class="step" id="step4"><span>4</span><strong>Télécharger Word</strong></div>
+    </section>
+
+    <section class="grid">
+      <aside class="panel">
+        <h2>Paramètres</h2>
+        <div class="panel-body">
+
+          <div class="field">
+            <label for="apiKey">Clé API Mistral</label>
+            <div class="row" style="gap:8px;">
+              <input id="apiKey" type="password" placeholder="Votre clé Mistral AI..." autocomplete="off" style="flex:1;">
+              <button class="btn" id="toggleApiKey" type="button" title="Afficher/Masquer" style="min-width:40px;flex:none;">
+                <svg id="eyeIcon" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="hint">Votre clé API Mistral AI. Elle est stockée localement dans votre navigateur et n'est jamais transmise ailleurs qu'à l'API Mistral.</div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="model">Modèle Mistral</label>
+              <select id="model">
+                <option value="mistral-large-latest">mistral-large</option>
+                <option value="mistral-medium-latest">mistral-medium</option>
+                <option value="mistral-small-latest">mistral-small</option>
+                <option value="open-mistral-nemo">mistral-nemo</option>
+                <option value="open-mistral-7b">mistral-7b</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Connexion</label>
+              <button class="btn" id="testOllamaBtn" type="button">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+                Tester l'API
+              </button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="fileNameMode">Nom fichier</label>
+            <select id="fileNameMode">
+              <option value="mce">CV_MCE_Prenom_N</option>
+              <option value="source">Basé sur le fichier source</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>CV source</label>
+            <div class="drop" id="dropZone" tabindex="0">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8 12 3 7 8"/><path d="M12 3v12"/></svg>
+              <strong>Déposer un CV ou cliquer</strong>
+              <span class="hint">Formats : .docx ou .pdf</span>
+              <input id="fileInput" type="file" accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+            </div>
+            <div class="hint" id="fileInfo">Aucun fichier sélectionné.</div>
+          </div>
+
+          <div class="row">
+            <button class="btn primary" id="transformBtn">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4"/><path d="M12 18v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="m16.24 16.24 2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="m16.24 7.76 2.83-2.83"/></svg>
+              Transformer
+            </button>
+            <button class="btn" id="downloadBtn" disabled>
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+              Word
+            </button>
+          </div>
+
+          <div class="message" id="message">Prêt. Entrez votre clé API Mistral et sélectionnez un modèle.</div>
+          <p class="hint danger-note">Votre clé API est stockée uniquement dans votre navigateur (localStorage). Les données du CV sont envoyées à l'API Mistral pour analyse. Le PDF final n'est pas généré dans cette version : validez le Word puis exportez-le en PDF depuis Word.</p>
+        </div>
+      </aside>
+
+      <section>
+        <div class="toolbar">
+          <h2 style="margin:0;font-size:18px;">Résultat</h2>
+          <span class="hint">Le Word généré reprend la structure cible MCE : En bref, expériences, formation.</span>
+        </div>
+        <div class="preview">
+          <div>
+            <label>Prévisualisation MCE</label>
+            <div class="cv-preview" id="cvPreview"></div>
+          </div>
+          <div>
+            <label>JSON structuré</label>
+            <pre id="jsonPreview">{}</pre>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    // ── PDF.js worker ─────────────────────────────────────────────────────────
+    if (typeof pdfjsLib !== "undefined") {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    const $ = (id) => document.getElementById(id);
+    const state = { file: null, data: null, docxBlob: null, docxName: "CV_MCE.docx" };
+
+    const apiKey        = $("apiKey");
+    const model         = $("model");
+    const testOllamaBtn = $("testOllamaBtn");
+    const toggleApiKey  = $("toggleApiKey");
+    const fileInput     = $("fileInput");
+    const dropZone      = $("dropZone");
+    const fileInfo      = $("fileInfo");
+    const message       = $("message");
+    const transformBtn  = $("transformBtn");
+    const downloadBtn   = $("downloadBtn");
+    const jsonPreview   = $("jsonPreview");
+    const cvPreview     = $("cvPreview");
+
+    // Restore preferences
+    apiKey.value    = localStorage.getItem("mce_mistral_key")   || "";
+    model.value     = localStorage.getItem("mce_mistral_model") || "mistral-large-latest";
+
+    // Toggle API key visibility
+    toggleApiKey.addEventListener("click", () => {
+      const show = apiKey.type === "password";
+      apiKey.type = show ? "text" : "password";
+      $("eyeIcon").innerHTML = show
+        ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`
+        : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+    });
+
+    function setMessage(text, type = "") {
+      message.textContent = text;
+      message.className = "message" + (type ? " " + type : "");
+    }
+
+    function setStep(n) {
+      for (let i = 1; i <= 4; i++) {
+        const el = $("step" + i);
+        el.classList.toggle("active", i === n);
+        el.classList.toggle("done",   i < n);
+      }
+    }
+
+    function escapeXml(s) {
+      return String(s ?? "").replace(/[<>&'"]/g,
+        c => ({ "<":"&lt;", ">":"&gt;", "&":"&amp;", "'":"&apos;", '"':"&quot;" }[c]));
+    }
+    function escapeHtml(s) {
+      return String(s ?? "").replace(/[<>&'"]/g,
+        c => ({ "<":"&lt;", ">":"&gt;", "&":"&amp;", "'":"&#39;", '"':"&quot;" }[c]));
+    }
+    function cleanText(s) { return String(s ?? "").trim(); }
+    function asArray(v)   { if (!v) return []; return Array.isArray(v) ? v : [v]; }
+    function safeFilePart(s) {
+      return cleanText(s).normalize("NFD").replace(/[̀-ͯ]/g, "")
+        .replace(/[\\/:*?"<>|]+/g, "_").replace(/\s+/g, "_") || "Profil";
+    }
+
+    // ── File selection ────────────────────────────────────────────────────────
+    function chooseFile(file) {
+      state.file = file; state.data = null; state.docxBlob = null;
+      downloadBtn.disabled = true;
+      fileInfo.textContent = file
+        ? `${file.name} — ${(file.size / 1024).toFixed(0)} Ko`
+        : "Aucun fichier sélectionné.";
+      setStep(file ? 2 : 1);
+      setMessage(file ? "CV sélectionné. Vous pouvez lancer l'analyse." : "Aucun fichier sélectionné.");
+    }
+
+    dropZone.addEventListener("click",   () => fileInput.click());
+    dropZone.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") fileInput.click(); });
+    fileInput.addEventListener("change", () => chooseFile(fileInput.files[0]));
+    ["dragenter","dragover"].forEach(evt => dropZone.addEventListener(evt, e => {
+      e.preventDefault(); dropZone.classList.add("drag");
+    }));
+    ["dragleave","drop"].forEach(evt => dropZone.addEventListener(evt, e => {
+      e.preventDefault(); dropZone.classList.remove("drag");
+    }));
+    dropZone.addEventListener("drop", e => chooseFile(e.dataTransfer.files[0]));
+
+    $("clearBtn").addEventListener("click", () => {
+      state.file = null; state.data = null; state.docxBlob = null;
+      fileInput.value = ""; fileInfo.textContent = "Aucun fichier sélectionné.";
+      jsonPreview.textContent = "{}"; cvPreview.innerHTML = "";
+      downloadBtn.disabled = true; setStep(1); setMessage("Réinitialisé.");
+    });
+
+    downloadBtn.addEventListener("click", () => {
+      if (!state.docxBlob) return;
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(state.docxBlob);
+      a.download = state.docxName;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1200);
+    });
+
+    // ── Test Mistral connection ───────────────────────────────────────────────
+    testOllamaBtn.addEventListener("click", async () => {
+      const key = apiKey.value.trim();
+      if (!key) { setMessage("Entrez votre clé API Mistral avant de tester.", "error"); return; }
+      testOllamaBtn.disabled = true;
+      setMessage("Test de connexion à l'API Mistral...");
+      try {
+        const res = await fetch("https://api.mistral.ai/v1/models", {
+          headers: { "Authorization": `Bearer ${key}` },
+          signal: AbortSignal.timeout(8000)
+        });
+        if (res.status === 401) throw new Error("Clé API invalide ou expirée.");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json  = await res.json().catch(() => ({}));
+        const names = (json.data || []).map(m => m.id).join(", ") || "";
+        setMessage(`API Mistral accessible ✓${names ? "  —  Modèles : " + names : ""}`, "ok");
+      } catch (err) {
+        setMessage(`API Mistral inaccessible : ${err.message}`, "error");
+      } finally {
+        testOllamaBtn.disabled = false;
+      }
+    });
+
+    // ── Transform button ──────────────────────────────────────────────────────
+    transformBtn.addEventListener("click", async () => {
+      try {
+        if (!state.file) throw new Error("Joignez un CV .docx ou .pdf.");
+
+        const key = apiKey.value.trim();
+        if (!key) throw new Error("Entrez votre clé API Mistral dans les paramètres.");
+
+        localStorage.setItem("mce_mistral_key",   key);
+        localStorage.setItem("mce_mistral_model", model.value);
+
+        transformBtn.disabled = true;
+        downloadBtn.disabled  = true;
+        setStep(3);
+        setMessage("Extraction du texte...");
+
+        let cvText;
+        const name = state.file.name.toLowerCase();
+
+        if (name.endsWith(".docx")) {
+          cvText = await extractDocxText(state.file);
+          if (cvText.length < 50) throw new Error("Le texte extrait du DOCX est trop court.");
+        } else if (name.endsWith(".pdf") || state.file.type === "application/pdf") {
+          if (typeof pdfjsLib === "undefined")
+            throw new Error("PDF.js n'est pas chargé. Vérifiez votre connexion ou convertissez le CV en DOCX.");
+          cvText = await extractPdfText(state.file);
+          if (cvText.length < 50)
+            throw new Error("Le texte extrait du PDF est trop court. Essayez un PDF non scanné ou convertissez en DOCX.");
+        } else {
+          throw new Error("Format non supporté. Utilisez .docx ou .pdf.");
+        }
+
+        setMessage("Analyse par Mistral AI en cours… (peut prendre quelques secondes)");
+        const raw  = await callOpenAI(key, model.value, cvText);
+        const data = parseJsonResponse(raw);
+
+        state.data = normalizeData(data);
+        jsonPreview.textContent = JSON.stringify(state.data, null, 2);
+        cvPreview.innerHTML     = renderPreview(state.data);
+        state.docxName  = makeOutputName(state.data);
+        state.docxBlob  = makeDocx(state.data);
+        downloadBtn.disabled = false;
+        setStep(4);
+        setMessage("CV transformé. Téléchargez le Word et validez-le.", "ok");
+      } catch (err) {
+        setMessage(err.message || String(err), "error");
+      } finally {
+        transformBtn.disabled = false;
+      }
+    });
+
+    // ── Mistral API ───────────────────────────────────────────────────────────
+    async function callOpenAI(key, selectedModel, cvText) {
+      const body = {
+        model: selectedModel,
+        temperature: 0.1,
+        messages: [
+          { role: "user", content: promptForCv(cvText) }
+        ]
+      };
+      let res;
+      try {
+        res = await fetch("https://api.mistral.ai/v1/chat/completions", {
+          method:  "POST",
+          headers: {
+            "Content-Type":  "application/json",
+            "Authorization": `Bearer ${key}`
+          },
+          body: JSON.stringify(body)
+        });
+      } catch (err) {
+        throw new Error(`Impossible de joindre l'API Mistral. Vérifiez votre connexion. Détail : ${err.message}`);
+      }
+      if (res.status === 401) throw new Error("Clé API Mistral invalide ou expirée.");
+      if (res.status === 429) throw new Error("Quota API dépassé ou trop de requêtes. Attendez un moment et réessayez.");
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(`API Mistral a répondu HTTP ${res.status}. ${txt}`);
+      }
+      const json = await res.json().catch(() => ({}));
+      const content = json.choices?.[0]?.message?.content;
+      if (!content) throw new Error("L'API Mistral n'a pas renvoyé de réponse exploitable.");
+      return content;
+    }
+
+    // ── Prompt ────────────────────────────────────────────────────────────────
+    function promptForCv(cvText) {
+      return `Tu es un expert en analyse de CV techniques et industriels.
+
+Transforme le CV source vers le format interne MCE Automation.
+Réponds UNIQUEMENT avec un JSON valide, sans markdown, sans commentaire, sans texte avant ou après.
+N'invente rien. Si une information est absente, mets null ou [].
+Supprime les données personnelles : téléphone, email, adresse, LinkedIn, date de naissance.
+Anonymise le nom : conserve seulement Prénom + initiale du nom.
+
+JSON attendu :
+{
+  "prenom": "Prénom",
+  "nom_initiale": "N",
+  "titre_fonction": "Fonction principale courte",
+  "experience_annees": "+ de 10 ans",
+  "specialites": ["outil", "compétence", "logiciel"],
+  "experiences": [
+    {
+      "periode": "Depuis 2020",
+      "entreprise": "Employeur",
+      "missions": [
+        {
+          "client": "Client/projet ou null",
+          "titre_poste": "Poste",
+          "taches": ["tâche courte", "tâche courte"]
+        }
+      ]
+    }
+  ],
+  "formation": [
+    { "annee": "2020", "diplome": "Diplôme ou certification" }
+  ],
+  "habilitations": "Habilitations ou null"
+}
+
+Règles :
+- Expériences en ordre antéchronologique.
+- Si une entreprise contient plusieurs clients/projets, crée plusieurs missions.
+- Les tâches doivent être professionnelles, courtes et sans première personne.
+- Les spécialités doivent privilégier outils, logiciels, technologies, méthodes, métiers.
+- Le titre_fonction sera utilisé dans l'en-tête du CV.
+
+CV SOURCE :
+${cvText}`;
+    }
+
+    // ── Parse JSON from LLM response ──────────────────────────────────────────
+    function parseJsonResponse(raw) {
+      let text = raw.trim()
+        .replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "");
+      const start = text.indexOf("{"), end = text.lastIndexOf("}");
+      if (start >= 0 && end > start) text = text.slice(start, end + 1);
+      try {
+        return JSON.parse(text);
+      } catch {
+        throw new Error("Le modèle n'a pas renvoyé de JSON valide. Essayez un modèle plus puissant ou relancez.");
+      }
+    }
+
+    // ── Text extraction ───────────────────────────────────────────────────────
+    async function extractDocxText(file) {
+      const bytes    = new Uint8Array(await file.arrayBuffer());
+      const entries  = await unzip(bytes);
+      const xmlBytes = entries["word/document.xml"];
+      if (!xmlBytes) throw new Error("DOCX invalide : word/document.xml introuvable.");
+      const xml = new TextDecoder().decode(xmlBytes);
+      return xml.match(/<w:t[^>]*>([\s\S]*?)<\/w:t>/g)
+        ?.map(t => decodeXml(t.replace(/<[^>]+>/g, ""))).join(" ") || "";
+    }
+
+    async function extractPdfText(file) {
+      const buffer = await file.arrayBuffer();
+      const pdf    = await pdfjsLib.getDocument({ data: buffer }).promise;
+      const parts  = [];
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page    = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        parts.push(content.items.map(item => item.str).join(" "));
+      }
+      return parts.join("\n");
+    }
+
+    function decodeXml(s) {
+      const doc = new DOMParser().parseFromString("<x>" + s + "</x>", "text/xml");
+      return doc.documentElement.textContent || "";
+    }
+
+    // ── ZIP reader (DOCX) ─────────────────────────────────────────────────────
+    async function unzip(bytes) {
+      const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      let eocd = -1;
+      for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 66000); i--) {
+        if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+      }
+      if (eocd < 0) throw new Error("Archive DOCX illisible.");
+      const total    = dv.getUint16(eocd + 10, true);
+      const cdOffset = dv.getUint32(eocd + 16, true);
+      const out = {};
+      let p = cdOffset;
+      for (let i = 0; i < total; i++) {
+        if (dv.getUint32(p, true) !== 0x02014b50) throw new Error("Central directory ZIP invalide.");
+        const method      = dv.getUint16(p + 10, true);
+        const compSize    = dv.getUint32(p + 20, true);
+        const nameLen     = dv.getUint16(p + 28, true);
+        const extraLen    = dv.getUint16(p + 30, true);
+        const commentLen  = dv.getUint16(p + 32, true);
+        const localOffset = dv.getUint32(p + 42, true);
+        const name        = new TextDecoder().decode(bytes.slice(p + 46, p + 46 + nameLen));
+        const localNameLen  = dv.getUint16(localOffset + 26, true);
+        const localExtraLen = dv.getUint16(localOffset + 28, true);
+        const dataStart     = localOffset + 30 + localNameLen + localExtraLen;
+        const compressed    = bytes.slice(dataStart, dataStart + compSize);
+        if (method === 0)      out[name] = compressed;
+        else if (method === 8) out[name] = await inflateRaw(compressed);
+        p += 46 + nameLen + extraLen + commentLen;
+      }
+      return out;
+    }
+
+    async function inflateRaw(bytes) {
+      if (!("DecompressionStream" in window))
+        throw new Error("Ce navigateur ne sait pas lire les DOCX compressés. Utilisez Chrome ou Edge récent.");
+      const ds     = new DecompressionStream("deflate-raw");
+      const stream = new Blob([bytes]).stream().pipeThrough(ds);
+      return new Uint8Array(await new Response(stream).arrayBuffer());
+    }
+
+    // ── Normalize & preview ───────────────────────────────────────────────────
+    function normalizeData(d) {
+      return {
+        prenom:            cleanText(d.prenom) || "Profil",
+        nom_initiale:      (cleanText(d.nom_initiale) || "N").slice(0,1).toUpperCase(),
+        titre_fonction:    cleanText(d.titre_fonction),
+        experience_annees: cleanText(d.experience_annees),
+        specialites:       asArray(d.specialites).map(cleanText).filter(Boolean),
+        experiences:       asArray(d.experiences).map(exp => ({
+          periode:    cleanText(exp.periode),
+          entreprise: cleanText(exp.entreprise),
+          missions:   asArray(exp.missions).map(m => ({
+            client:      cleanText(m.client),
+            titre_poste: cleanText(m.titre_poste),
+            taches:      asArray(m.taches).map(cleanText).filter(Boolean)
+          }))
+        })),
+        formation:    asArray(d.formation)
+          .map(f => ({ annee: cleanText(f.annee), diplome: cleanText(f.diplome) }))
+          .filter(f => f.annee || f.diplome),
+        habilitations: cleanText(d.habilitations)
+      };
+    }
+
+    function renderPreview(d) {
+      let h = `<div class="cv-head"><b>MCE Automation</b>${escapeHtml(d.prenom)} ${escapeHtml(d.nom_initiale)}.${d.titre_fonction ? " - " + escapeHtml(d.titre_fonction) : ""}</div>`;
+      h += `<div class="cv-title">EN BREF</div>`;
+      if (d.experience_annees) h += `<p class="cv-p"><b>Expérience</b> : ${escapeHtml(d.experience_annees)}</p>`;
+      if (d.specialites.length) h += `<p class="cv-p"><b>Spécialités</b> : ${escapeHtml(d.specialites.join(", "))}</p>`;
+      h += `<div class="cv-title">EXPERIENCES PROFESSIONNELLES</div>`;
+      for (const exp of d.experiences) {
+        const line = [exp.periode, exp.entreprise].filter(Boolean).join(" ");
+        if (line) h += `<p class="cv-p cv-bold">${escapeHtml(line)}</p>`;
+        for (const m of exp.missions) {
+          if (m.client)      h += `<p class="cv-p" style="margin-left: 20px;">• Pour ${escapeHtml(m.client)} :</p>`;
+          if (m.titre_poste) h += `<p class="cv-p cv-bold" style="margin-left: 20px;">• ${escapeHtml(m.titre_poste)}</p>`;
+          for (const t of m.taches) h += `<p class="cv-p" style="margin-left: 20px;">• ${escapeHtml(t)}</p>`;
+          h += `<br>`;
+        }
+      }
+      h += `<div class="cv-title">FORMATION</div>`;
+      if (d.habilitations) h += `<p class="cv-p cv-bold">Habilitations : ${escapeHtml(d.habilitations)}</p>`;
+      for (const f of d.formation)
+        h += `<p class="cv-p cv-bold">${escapeHtml([f.annee, f.diplome].filter(Boolean).join(" : "))}</p>`;
+      return h;
+    }
+
+    function makeOutputName(d) {
+      if ($("fileNameMode").value === "source" && state.file)
+        return safeFilePart(state.file.name.replace(/\.[^.]+$/, "")) + "_MCE.docx";
+      return `CV_MCE_${safeFilePart(d.prenom)}_${safeFilePart(d.nom_initiale)}.docx`;
+    }
+
+    // ── DOCX generation ───────────────────────────────────────────────────────────
+    function makeDocx(d) {
+      const files = {
+        "[Content_Types].xml":          contentTypesXml(),
+        "_rels/.rels":                  rootRelsXml(),
+        "docProps/app.xml":             appXml(),
+        "docProps/core.xml":            coreXml(),
+        "word/_rels/document.xml.rels": docRelsXml(),
+        "word/header1.xml":             headerXml(d),
+        "word/footer1.xml":             footerXml(),
+        "word/document.xml":            documentXml(d)
+      };
+      return new Blob([zipStore(files)],
+        { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    }
+
+    function footerXml() {
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:jc w:val="right"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="18"/></w:rPr><w:t>Contact MCE Automation</w:t></w:r></w:p><w:p><w:pPr><w:jc w:val="right"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="18"/></w:rPr><w:t>rh@mce-automation.com</w:t></w:r></w:p><w:p><w:pPr><w:jc w:val="right"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Wingdings" w:hAnsi="Wingdings"/><w:sz w:val="18"/></w:rPr><w:t>&#40;</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="18"/></w:rPr><w:t> 02.78.94.02.90</w:t></w:r></w:p></w:ftr>`;
+    }
+
+    function pXmlPartialBold(parts, fontSize = 20, font = "Calibri", indent = 0) {
+      const indentStr = indent > 0 ? `<w:ind w:left="${indent}" w:hang="0"/>` : "";
+      let rr = "";
+      for (const part of parts) {
+        const b = part.bold ? "<w:b/>" : "";
+        rr += `<w:r><w:rPr>${b}<w:rFonts w:ascii="${font}" w:hAnsi="${font}"/><w:sz w:val="${fontSize}"/></w:rPr><w:t xml:space="preserve">${escapeXml(part.text)}</w:t></w:r>`;
+      }
+      return `<w:p><w:pPr>${indentStr}<w:spacing w:after="25"/></w:pPr>${rr}</w:p>`;
+    }
+
+    function pXml(text, bold = false, title = false, fontSize = 20, font = "Calibri", align = "", indent = 0) {
+      const border = title
+        ? `<w:pBdr><w:bottom w:val="single" w:sz="8" w:space="1" w:color="ED7D31"/></w:pBdr>`
+        : "";
+      const b = bold ? "<w:b/>" : "";
+      const alignStr = align ? `<w:jc w:val="${align}"/>` : "";
+      const indentStr = indent > 0 ? `<w:ind w:left="${indent}" w:hang="0"/>` : "";
+      return `<w:p><w:pPr>${alignStr}${indentStr}${border}<w:spacing w:after="${title ? 80 : 25}"/></w:pPr><w:r><w:rPr>${b}<w:rFonts w:ascii="${font}" w:hAnsi="${font}"/><w:sz w:val="${fontSize}"/></w:rPr><w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r></w:p>`;
+    }
+
+    function headerXml(d) {
+      const infoLine = `${d.prenom} ${d.nom_initiale}.${d.titre_fonction ? " - " + d.titre_fonction : ""}`;
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:jc w:val="right"/></w:pPr><w:r><w:rPr><w:b/><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="36"/><w:color w:val="ED7D31"/></w:rPr><w:t>MCE Automation</w:t></w:r></w:p><w:p><w:pPr><w:jc w:val="right"/></w:pPr><w:r><w:rPr><w:b/><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="32"/></w:rPr><w:t xml:space="preserve">${escapeXml(infoLine)}</w:t></w:r></w:p></w:hdr>`;
+    }
+
+    function documentXml(d) {
+      let body = "";
+      body += pXml("", false);
+      
+      // Section EN BREF
+      body += pXml("EN BREF", false, true, 24, "Calibri");
+      if (d.experience_annees) body += pXmlPartialBold([{text: "Expérience", bold: true}, {text: " : " + d.experience_annees, bold: false}], 24, "Calibri");
+      if (d.specialites.length) body += pXmlPartialBold([{text: "Spécialités", bold: true}, {text: " : " + d.specialites.join(", "), bold: false}], 24, "Calibri");
+      
+      // Section EXPERIENCES PROFESSIONNELLES
+      body += pXml("EXPERIENCES PROFESSIONNELLES", false, true, 24, "Calibri");
+      for (const exp of d.experiences) {
+        const line = [exp.periode, exp.entreprise].filter(Boolean).join(" ");
+        if (line) body += pXml(line, true, false, 24, "Calibri");
+        for (const m of exp.missions) {
+          if (m.client) {
+            const clientLine = `• Pour ${m.client} :`;
+            body += pXml(clientLine, false, false, 20, "Calibri", "", 720);
+          }
+          if (m.titre_poste) body += pXml(`• ${m.titre_poste}`, true, false, 20, "Calibri", "", 720);
+          for (const t of m.taches) body += pXml(`• ${t}`, false, false, 20, "Calibri", "", 720);
+          body += pXml("", false);
+        }
+      }
+      
+      // Section FORMATION
+      body += pXml("FORMATION", false, true, 24, "Calibri");
+      if (d.habilitations) body += pXml(`Habilitations : ${d.habilitations}`, true, false, 22, "Calibri");
+      for (const f of d.formation)
+        body += pXml([f.annee, f.diplome].filter(Boolean).join(" : "), true, false, 22, "Calibri");
+      
+      body += `<w:sectPr><w:headerReference w:type="default" r:id="rId1"/><w:footerReference w:type="default" r:id="rId2"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1361" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr>`;
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body>${body}</w:body></w:document>`;
+    }
+
+    function contentTypesXml() {
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`;
+    }
+    function rootRelsXml() {
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>`;
+    }
+    function docRelsXml() {
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/></Relationships>`;
+    }
+    function appXml() {
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>CV Transformer MCE</Application></Properties>`;
+    }
+    function coreXml() {
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/"><dc:title>CV MCE</dc:title><dc:creator>CV Transformer MCE</dc:creator><dcterms:created>${new Date().toISOString()}</dcterms:created></cp:coreProperties>`;
+    }
+
+    // ── ZIP writer (store, no compression) ───────────────────────────────────
+    const crcTable = (() => {
+      const t = new Uint32Array(256);
+      for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+        t[n] = c >>> 0;
+      }
+      return t;
+    })();
+
+    function crc32(bytes) {
+      let c = 0xffffffff;
+      for (const b of bytes) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8);
+      return (c ^ 0xffffffff) >>> 0;
+    }
+
+    function u16(n) { return [n & 255, (n >>> 8) & 255]; }
+    function u32(n) { return [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255]; }
+
+    function zipStore(files) {
+      const encoder = new TextEncoder();
+      const local = [], central = [];
+      let offset = 0;
+      for (const [name, content] of Object.entries(files)) {
+        const nameBytes = encoder.encode(name);
+        const data      = encoder.encode(content);
+        const crc       = crc32(data);
+        const lh = new Uint8Array([
+          ...u32(0x04034b50), ...u16(20), ...u16(2048), ...u16(0), ...u16(0), ...u16(0),
+          ...u32(crc), ...u32(data.length), ...u32(data.length),
+          ...u16(nameBytes.length), ...u16(0)
+        ]);
+        local.push(lh, nameBytes, data);
+        const ch = new Uint8Array([
+          ...u32(0x02014b50), ...u16(20), ...u16(20), ...u16(2048), ...u16(0), ...u16(0), ...u16(0),
+          ...u32(crc), ...u32(data.length), ...u32(data.length),
+          ...u16(nameBytes.length), ...u16(0), ...u16(0),
+          ...u16(0), ...u16(0), ...u32(0), ...u32(offset)
+        ]);
+        central.push(ch, nameBytes);
+        offset += lh.length + nameBytes.length + data.length;
+      }
+      const cdSize = central.reduce((n, a) => n + a.length, 0);
+      const eocd = new Uint8Array([
+        ...u32(0x06054b50), ...u16(0), ...u16(0),
+        ...u16(Object.keys(files).length), ...u16(Object.keys(files).length),
+        ...u32(cdSize), ...u32(offset), ...u16(0)
+      ]);
+      return new Blob([...local, ...central, eocd]);
+    }
+    
+    
+  </script>
+</body>
+</html>
